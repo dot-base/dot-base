@@ -12,8 +12,10 @@ jobs:
 
       - name: Validate and Build Docker App
         run: |
-          export DOCKER_CLI_EXPERIMENTAL=enabled
-          docker --version
+          sudo rm /etc/docker/daemon.json
+          echo $'{"experimental": true}' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+          docker version -f '{{.Server.Experimental}}'
 
           docker app validate dot-base.dockerapp
           docker app build dot-base.dockerapp -t ghcr.io/dot-base/dot-base:latest
