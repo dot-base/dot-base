@@ -13,6 +13,7 @@ jobs:
       - name: Validate and Build Docker App
         run: |
           export DOCKER_CLI_EXPERIMENTAL=enabled
+          docker --version
 
           docker app validate dot-base.dockerapp
           docker app build dot-base.dockerapp -t ghcr.io/dot-base/dot-base:latest
