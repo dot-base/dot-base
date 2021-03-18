@@ -1,0 +1,274 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v2.2
+    networks:
+      - proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    command:
+      - "--log.level=INFO"
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--providers.file.watch=true"
+      - "--providers.file.directory=/run/config/"
+      - "--entrypoints.web-secure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=web-secure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+    configs:
+      - source: traefik.toml
+        target: /run/config/traefik.toml
+    secrets:
+      - cert.pem
+      - key.pem
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.api.tls=true"
+        - "traefik.http.routers.api.middlewares=sso"
+        - "traefik.http.routers.api.rule=Host(`traefik.${HOSTNAME}`)"
+        - "traefik.http.services.api.loadbalancer.server.port=8080"
+        - "traefik.http.routers.api.service=api@internal"
+  
+  traefik-forward-auth:
+    image: thomseddon/traefik-forward-auth:2
+    networks:
+      - proxy
+    configs:
+      - source: custom-ca.crt
+        target: /etc/ssl/certs/custom-ca.crt
+    environment:
+      - DEFAULT_PROVIDER=oidc
+      - PROVIDERS_OIDC_ISSUER_URL=https://sso.${HOSTNAME}/auth/realms/dotbase
+      - PROVIDERS_OIDC_CLIENT_ID=central-proxy
+      - PROVIDERS_OIDC_CLIENT_SECRET=${AUTH_CLIENT_SECRET}
+      - LOGOUT_REDIRECT=https://${HOSTNAME}/
+      - SECRET=${SIGNING_SECRET}
+      - INSECURE_COOKIE=true
+      - LOG_LEVEL=debug
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.middlewares.sso.forwardauth.address=http://traefik-forward-auth:4181"
+        - "traefik.http.middlewares.sso.forwardauth.authResponseHeaders=X-Forwarded-User"
+        - "traefik.http.services.traefik-forward-auth.loadbalancer.server.port=4181"
+
+  keycloak:
+    image: ghcr.io/dot-base/keycloak:latest
+    networks:
+      - proxy
+      - keycloak
+    environment:
+      - DB_VENDOR=postgres
+      - DB_ADDR=keycloak-db
+      - DB_USER=${KEYCLOAK_DB_USER}
+      - DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+      - KEYCLOAK_USER=${KEYCLOAK_USER}
+      - KEYCLOAK_PASSWORD=${KEYCLOAK_PASSWORD}
+      - KEYCLOAK_IMPORT=/run/secrets/dotbase-realm.json
+      - PROXY_ADRESS_FORWARDING=true
+    secrets:
+      - dotbase-realm.json
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=proxy"
+        - "traefik.http.routers.keycloak.tls=true"
+        - "traefik.http.routers.keycloak.rule=Host(`sso.${HOSTNAME}`)"
+        - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+  
+  keycloak-db:
+    image: postgres:13-alpine
+    networks:
+      - keycloak
+    volumes:
+      - keycloak-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=${KEYCLOAK_DB_USER}
+      - POSTGRES_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+    deploy:
+      placement:
+        max_replicas_per_node: 1
+
+  error-handler:
+    image: ghcr.io/dot-base/error-handler:latest
+    networks:
+      - proxy
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+  
+        - "traefik.http.routers.error-router.priority=1"
+        - "traefik.http.routers.error-router.rule=HostRegexp(`{host:.+}`)"
+        - "traefik.http.routers.error-router.middlewares=error-pages-middleware"
+  
+        - "traefik.http.middlewares.error-pages-middleware.errors.status=400-599"
+        - "traefik.http.middlewares.error-pages-middleware.errors.service=error-handler"
+        - "traefik.http.middlewares.error-pages-middleware.errors.query=/{status}/index.html"
+  
+        - "traefik.http.routers.error-static.tls=true"
+        - "traefik.http.routers.error-static.rule=Host(`error.${HOSTNAME}`)"
+  
+        - "traefik.http.services.error-handler.loadbalancer.server.port=80"
+
+  medical-dashboard:
+    image: ghcr.io/dot-base/medical-dashboard:next
+    networks:
+      - proxy
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontend.tls=true"
+        - "traefik.http.routers.frontend.middlewares=sso"
+        - "traefik.http.routers.frontend.rule=Host(`${HOSTNAME}`)"
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+  fhir-server:
+    image: ghcr.io/dot-base/fhir-server:next
+    environment:
+      HAPI_SERVER_ADDRESS: "https://${HOSTNAME}/api/fhir/"
+      HAPI_DATASOURCE_URL: "jdbc:postgresql://fhir-db:5432/hapi_r4"
+      HAPI_DATASOURCE_USERNAME: ${FHIR_DB_USER}
+      HAPI_DATASOURCE_PASSWORD: ${FHIR_DB_PASSWORD}
+      SENTRY_DSN: ${FHIR_SERVER_SENTRY_DSN}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
+    networks:
+      - proxy
+      - fhir
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=proxy"
+        - "traefik.http.routers.fhir.tls=true"
+        - "traefik.http.routers.fhir.middlewares=sso"
+        - "traefik.http.routers.fhir.rule=Host(`${HOSTNAME}`) && PathPrefix(`/api/fhir`)"
+        - "traefik.http.services.fhir.loadbalancer.server.port=8080"
+  
+  fhir-db:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: "hapi_r4"
+      POSTGRES_USER: ${FHIR_DB_USER}
+      POSTGRES_PASSWORD: ${FHIR_DB_PASSWORD}
+    networks:
+      - fhir
+    volumes:
+      - fhir-data:/var/lib/postgresql/data
+    deploy:
+      placement:
+        max_replicas_per_node: 1
+
+  file-storage-api:
+    image: ghcr.io/dot-base/file-storage-api:next
+    environment:
+      DOMAIN: ${HOSTNAME}
+      SENTRY_DSN: ${FILE_STORAGE_API_SENTRY_DSN}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
+    networks:
+      - proxy
+    volumes:
+      - file-storage:/files
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.file-storage-api.tls=true"
+        - "traefik.http.routers.file-storage-api.middlewares=sso"
+        - "traefik.http.routers.file-storage-api.rule=Host(`${HOSTNAME}`) && PathPrefix(`/api/files`)"
+        - "traefik.http.services.file-storage-api.loadbalancer.server.port=3000"
+
+  icd-10-api:
+    image: ghcr.io/dot-base/icd-10-api:next
+    environment:
+      SENTRY_DSN: ${ICD_10_API_SENTRY_DSN}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
+    networks:
+      - proxy
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.icd-10-api.tls=true"
+        - "traefik.http.routers.icd-10-api.middlewares=sso"
+        - "traefik.http.routers.icd-10-api.rule=Host(`${HOSTNAME}`) && PathPrefix(`/api/icd10`)"
+        - "traefik.http.services.icd-10-api.loadbalancer.server.port=3000"
+
+networks:
+  proxy:
+  keycloak:
+  fhir:
+
+volumes:
+  keycloak-data:
+  fhir-data:
+  file-storage:
+
+secrets:
+  dotbase-realm.json:
+    external: true
+  cert.pem:
+    external: true
+  key.pem:
+    external: true
+
+configs:
+  traefik.toml:
+    external: true
+  custom-ca.crt:
+    external: true

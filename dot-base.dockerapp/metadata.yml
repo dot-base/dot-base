@@ -1,0 +1,10 @@
+# Version of the application
+version: 0.0.1
+# Name of the application
+name: dot-base
+# A short description of the application
+description: dot.base is a FHIR-fueled Health Record System
+# List of application maintainers with name and email for each
+maintainers:
+  - name: dot.base
+    email: movebase@charite.de
