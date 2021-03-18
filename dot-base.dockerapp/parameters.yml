@@ -1,0 +1,18 @@
+HOSTNAME: demo.dotbase.org
+
+AUTH_CLIENT_SECRET: some_secret
+SIGNING_SECRET: some_other_secret
+
+KEYCLOAK_USER: kc_admin
+KEYCLOAK_PASSWORD: kc_admin_password
+
+KEYCLOAK_DB_USER: kc_db_admin
+KEYCLOAK_DB_PASSWORD: kc_db_admin_password
+
+FHIR_DB_USER: fhir_db_admin
+FHIR_DB_PASSWORD: fhir_db_admin_password
+
+SENTRY_ENVIRONMENT: demo
+FHIR_SERVER_SENTRY_DSN: some_dsn
+FILE_STORAGE_API_SENTRY_DSN: some_dsn
+ICD_10_API_SENTRY_DSN: some_dsn

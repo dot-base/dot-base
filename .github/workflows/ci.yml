@@ -1,0 +1,18 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Validate and Build Docker App
+        run: |
+          export DOCKER_CLI_EXPERIMENTAL=enabled
+
+          docker app validate dot-base.dockerapp
+          docker app build dot-base.dockerapp -t ghcr.io/dot-base/dot-base:latest
