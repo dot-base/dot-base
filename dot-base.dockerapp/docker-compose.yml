@@ -9,15 +9,12 @@ services:
       - "80:80"
       - "443:443"
     command:
-      - "--log.level=INFO"
-      - "--api.insecure=true"
-      - "--api.dashboard=true"
       - "--providers.docker=true"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
       - "--providers.file.watch=true"
       - "--providers.file.directory=/run/config/"
+      - "--entrypoints.web.address=:80"
       - "--entrypoints.web-secure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=web-secure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
@@ -37,13 +34,6 @@ services:
         delay: 60s
       restart_policy:
         condition: on-failure
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.api.tls=true"
-        - "traefik.http.routers.api.middlewares=sso"
-        - "traefik.http.routers.api.rule=Host(`traefik.${HOSTNAME}`)"
-        - "traefik.http.services.api.loadbalancer.server.port=8080"
-        - "traefik.http.routers.api.service=api@internal"
   
   traefik-forward-auth:
     image: thomseddon/traefik-forward-auth:2
