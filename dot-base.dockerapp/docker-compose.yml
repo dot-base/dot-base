@@ -12,7 +12,6 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.file.watch=true"
       - "--providers.file.directory=/run/config/"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web-secure.address=:443"
