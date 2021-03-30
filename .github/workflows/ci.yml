@@ -10,12 +10,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
+      - name: Install docker app plugin
+        run: |
+          export DOCKER_CLI_EXPERIMENTAL=enabled
+          export OSTYPE="$(uname | tr A-Z a-z)"
+          curl -fsSL --output "/tmp/docker-app-${OSTYPE}.tar.gz" "https://github.com/docker/app/releases/download/v0.8.0/docker-app-${OSTYPE}.tar.gz"
+          tar xf "/tmp/docker-app-${OSTYPE}.tar.gz" -C /tmp/
+          mkdir -p ~/.docker/cli-plugins && cp "/tmp/docker-app-plugin-${OSTYPE}" ~/.docker/cli-plugins/docker-app
+
       - name: Validate and Build Docker App
         run: |
-          sudo rm /etc/docker/daemon.json
-          echo $'{"experimental": true}' | sudo tee /etc/docker/daemon.json
-          sudo service docker restart
-          docker version -f '{{.Server.Experimental}}'
-
           docker app validate dot-base.dockerapp
           docker app build dot-base.dockerapp -t ghcr.io/dot-base/dot-base:latest
