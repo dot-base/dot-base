@@ -89,7 +89,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=proxy"
+        - "traefik.docker.network=dot-base_proxy"
         - "traefik.http.routers.keycloak.tls=true"
         - "traefik.http.routers.keycloak.rule=Host(`sso.${HOSTNAME}`)"
         - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
@@ -174,7 +174,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=proxy"
+        - "traefik.docker.network=dot-base_proxy"
         - "traefik.http.routers.fhir.tls=true"
         - "traefik.http.routers.fhir.middlewares=sso"
         - "traefik.http.routers.fhir.rule=Host(`${HOSTNAME}`) && PathPrefix(`/api/fhir`)"
