@@ -134,7 +134,7 @@ services:
         - "traefik.http.services.error-handler.loadbalancer.server.port=80"
 
   medical-dashboard:
-    image: ghcr.io/dot-base/medical-dashboard:next
+    image: ghcr.io/dot-base/medical-dashboard:0.5.0
     networks:
       - proxy
     deploy:
@@ -152,7 +152,7 @@ services:
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
 
   fhir-server:
-    image: ghcr.io/dot-base/fhir-server:next
+    image: ghcr.io/dot-base/fhir-server:6.2.0
     environment:
       HAPI_SERVER_ADDRESS: "https://${HOSTNAME}/api/fhir/"
       HAPI_DATASOURCE_URL: "jdbc:postgresql://fhir-db:5432/hapi_r4"
@@ -193,7 +193,7 @@ services:
         max_replicas_per_node: 1
 
   file-storage-api:
-    image: ghcr.io/dot-base/file-storage-api:next
+    image: ghcr.io/dot-base/file-storage-api:1.0.2
     environment:
       DOMAIN: ${HOSTNAME}
       SENTRY_DSN: ${FILE_STORAGE_API_SENTRY_DSN}
@@ -217,7 +217,7 @@ services:
         - "traefik.http.services.file-storage-api.loadbalancer.server.port=3000"
 
   icd-10-api:
-    image: ghcr.io/dot-base/icd-10-api:next
+    image: ghcr.io/dot-base/icd-10-api:2.0.0
     environment:
       SENTRY_DSN: ${ICD_10_API_SENTRY_DSN}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
