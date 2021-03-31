@@ -74,7 +74,7 @@ services:
       - KEYCLOAK_USER=${KEYCLOAK_USER}
       - KEYCLOAK_PASSWORD=${KEYCLOAK_PASSWORD}
       - KEYCLOAK_IMPORT=/run/secrets/dotbase-realm.json
-      - PROXY_ADRESS_FORWARDING=true
+      - PROXY_ADDRESS_FORWARDING=true
     secrets:
       - dotbase-realm.json
     deploy:
