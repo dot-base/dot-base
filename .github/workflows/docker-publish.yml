@@ -8,9 +8,6 @@ on:
     tags:
       - v*
 
-env:
-  TMP_IMAGE_NAME: tmp-image
-
 jobs:
   push:
     name: Build and Push Docker App
@@ -26,14 +23,10 @@ jobs:
           tar xf "/tmp/docker-app-${OSTYPE}.tar.gz" -C /tmp/
           mkdir -p ~/.docker/cli-plugins && cp "/tmp/docker-app-plugin-${OSTYPE}" ~/.docker/cli-plugins/docker-app
 
-      - name: Build app
-        run: |
-          docker app build dot-base.dockerapp -t $TMP_IMAGE_NAME
-
       - name: Log into registry
         run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Push app
+      - name: Set app name and version
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository }}
 
@@ -55,5 +48,10 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
-          docker tag $TMP_IMAGE_NAME $IMAGE_ID:$VERSION
+      - name: Build app
+        run: |
+          docker app build dot-base.dockerapp -t $IMAGE_ID:$VERSION
+
+      - name: Push app
+        run: |
           docker app push $IMAGE_ID:$VERSION
