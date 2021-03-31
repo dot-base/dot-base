@@ -106,7 +106,7 @@ services:
         max_replicas_per_node: 1
 
   error-handler:
-    image: ghcr.io/dot-base/error-handler:latest
+    image: ghcr.io/dot-base/error-handler:1.0.0
     networks:
       - proxy
     deploy:
@@ -119,6 +119,10 @@ services:
       labels:
         - "traefik.enable=true"
   
+        - "traefik.http.routers.error-static.tls=true"
+        - "traefik.http.routers.error-static.rule=Host(`error.${HOSTNAME}`)"
+
+        - "traefik.http.routers.error-router.tls=true"
         - "traefik.http.routers.error-router.priority=1"
         - "traefik.http.routers.error-router.rule=HostRegexp(`{host:.+}`)"
         - "traefik.http.routers.error-router.middlewares=error-pages-middleware"
@@ -126,9 +130,6 @@ services:
         - "traefik.http.middlewares.error-pages-middleware.errors.status=400-599"
         - "traefik.http.middlewares.error-pages-middleware.errors.service=error-handler"
         - "traefik.http.middlewares.error-pages-middleware.errors.query=/{status}/index.html"
-  
-        - "traefik.http.routers.error-static.tls=true"
-        - "traefik.http.routers.error-static.rule=Host(`error.${HOSTNAME}`)"
   
         - "traefik.http.services.error-handler.loadbalancer.server.port=80"
 
