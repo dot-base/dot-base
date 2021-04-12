@@ -152,7 +152,7 @@ services:
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
 
   fhir-server:
-    image: ghcr.io/dot-base/fhir-server:6.2.0
+    image: ghcr.io/dot-base/fhir-server:6.2.1
     environment:
       HAPI_SERVER_ADDRESS: "https://${HOSTNAME}/api/fhir/"
       HAPI_DATASOURCE_URL: "jdbc:postgresql://fhir-db:5432/hapi_r4"
