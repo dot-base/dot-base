@@ -237,6 +237,36 @@ services:
         - "traefik.http.routers.icd-10-api.rule=Host(`${HOSTNAME}`) && PathPrefix(`/api/icd10`)"
         - "traefik.http.services.icd-10-api.loadbalancer.server.port=3000"
 
+  hdp-adapter:
+    image: ghcr.io/dot-base/hdp-adapter:1.0.0
+    environment:
+	    FHIR_SERVER_ADDRESS: http://fhir-server:8080
+      ORGANIZATION_NAME: ${HDP_ADAPTER_ORGANIZATION_NAME}
+      ORGANIZATION_IKNR: ${HDP_ADAPTER_ORGANIZATION_IKNR}
+      HDP_SERVER: ${HDP_ADAPTER_SERVER}
+      HDP_PORT: ${HDP_ADAPTER_PORT}
+      HDP_DB: ${HDP_ADAPTER_DB}
+      LDAP_DOMAIN: ${HDP_ADAPTER_LDAP_DOMAIN}
+      LDAP_USER: ${HDP_ADAPTER_LDAP_USER}
+      LDAP_PASSWORD: ${HDP_ADAPTER_LDAP_PASSWORD}
+      SENTRY_DSN: ${HDP_ADAPTER_SENTRY_DSN}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
+    networks:
+      - proxy
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.hdp-adapter.tls=true"
+        - "traefik.http.routers.hdp-adapter.middlewares=sso"
+        - "traefik.http.routers.hdp-adapter.rule=Host(`${HOSTNAME}`) && PathPrefix(`/api/import/patient`)"
+        - "traefik.http.services.hdp-adapter.loadbalancer.server.port=3000"
+
 networks:
   proxy:
   keycloak:
