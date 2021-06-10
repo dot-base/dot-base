@@ -1,5 +1,8 @@
 HOSTNAME: demo.dotbase.org
 
+PROXY_ADDRESS: proxy.hostname.org
+PROXY_PORT: 8080
+
 AUTH_CLIENT_SECRET: some_secret
 SIGNING_SECRET: some_other_secret
 
