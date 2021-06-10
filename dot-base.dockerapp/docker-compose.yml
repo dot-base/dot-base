@@ -152,14 +152,19 @@ services:
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
 
   fhir-server:
-    image: ghcr.io/dot-base/fhir-server:6.2.1
+    image: ghcr.io/dot-base/fhir-server:7.0.0
     environment:
+      PROXY_ADDRESS: ${PROXY_ADDRESS}
+      PROXY_PORT: ${PROXY_PORT}
+
       HAPI_SERVER_ADDRESS: "https://${HOSTNAME}/api/fhir/"
       HAPI_DATASOURCE_URL: "jdbc:postgresql://fhir-db:5432/hapi_r4"
       HAPI_DATASOURCE_USERNAME: ${FHIR_DB_USER}
       HAPI_DATASOURCE_PASSWORD: ${FHIR_DB_PASSWORD}
-      SENTRY_DSN: ${FHIR_SERVER_SENTRY_DSN}
+      HAPI_SSO_REALM_ADDRESS: "http://sso.${HOSTNAME}/auth/realms/dotbase"
+
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
+      SENTRY_DSN: ${FHIR_SERVER_SENTRY_DSN}
     networks:
       - proxy
       - fhir
