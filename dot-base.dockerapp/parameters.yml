@@ -12,7 +12,17 @@ KEYCLOAK_DB_PASSWORD: kc_db_admin_password
 FHIR_DB_USER: fhir_db_admin
 FHIR_DB_PASSWORD: fhir_db_admin_password
 
+HDP_ADAPTER_SERVER: hdp.hostname.org
+HDP_ADAPTER_PORT: 1234
+HDP_ADAPTER_DB: some_database_name
+HDP_ADAPTER_LDAP_DOMAIN: ldap_service_user_domain
+HDP_ADAPTER_LDAP_USER: ldap_service_user_name
+HDP_ADAPTER_LDAP_PASSWORD: ldap_service_user_password
+HDP_ADAPTER_ORGANIZATION_NAME: organization_name
+HDP_ADAPTER_ORGANIZATION_IKNR: organization_iknr # http://fhir.de/sid/arge-ik/iknr
+
 SENTRY_ENVIRONMENT: demo
 FHIR_SERVER_SENTRY_DSN: some_dsn
 FILE_STORAGE_API_SENTRY_DSN: some_dsn
 ICD_10_API_SENTRY_DSN: some_dsn
+HDP_ADAPTER_SENTRY_DSN: some_dsn
