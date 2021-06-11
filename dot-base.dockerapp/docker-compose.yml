@@ -161,7 +161,7 @@ services:
       HAPI_DATASOURCE_URL: "jdbc:postgresql://fhir-db:5432/hapi_r4"
       HAPI_DATASOURCE_USERNAME: ${FHIR_DB_USER}
       HAPI_DATASOURCE_PASSWORD: ${FHIR_DB_PASSWORD}
-      HAPI_SSO_REALM_ADDRESS: "http://sso.${HOSTNAME}/auth/realms/dotbase"
+      HAPI_SSO_REALM_ADDRESS: "http://keycloak:8080/auth/realms/dotbase"
 
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
       SENTRY_DSN: ${FHIR_SERVER_SENTRY_DSN}
