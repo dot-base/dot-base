@@ -243,7 +243,7 @@ services:
         - "traefik.http.services.icd-10-api.loadbalancer.server.port=3000"
 
   hdp-adapter:
-    image: ghcr.io/dot-base/hdp-adapter:1.0.0
+    image: ghcr.io/dot-base/hdp-adapter:1.0.1
     environment:
       FHIR_SERVER_ADDRESS: "http://fhir-server:8080"
       ORGANIZATION_NAME: ${HDP_ADAPTER_ORGANIZATION_NAME}
