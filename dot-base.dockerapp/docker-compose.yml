@@ -134,7 +134,7 @@ services:
         - "traefik.http.services.error-handler.loadbalancer.server.port=80"
 
   medical-dashboard:
-    image: ghcr.io/dot-base/medical-dashboard:1.0.0
+    image: ghcr.io/dot-base/medical-dashboard:1.1.0
     networks:
       - proxy
     deploy:
