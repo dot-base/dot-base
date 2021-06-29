@@ -197,7 +197,7 @@ services:
         max_replicas_per_node: 1
 
   file-storage-api:
-    image: ghcr.io/dot-base/file-storage-api:1.0.2
+    image: ghcr.io/dot-base/file-storage-api:1.1.0
     environment:
       DOMAIN: ${HOSTNAME}
       SENTRY_DSN: ${FILE_STORAGE_API_SENTRY_DSN}
