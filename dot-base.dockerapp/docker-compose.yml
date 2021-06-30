@@ -46,7 +46,7 @@ services:
       - PROVIDERS_OIDC_ISSUER_URL=https://sso.${HOSTNAME}/auth/realms/dotbase
       - PROVIDERS_OIDC_CLIENT_ID=central-proxy
       - PROVIDERS_OIDC_CLIENT_SECRET=${AUTH_CLIENT_SECRET}
-      - LOGOUT_REDIRECT=https://sso.${HOSTNAME}/auth/realms/dotbase/protocol/openid-connect/auth\?client_id\=central-proxy\&redirect_uri\=https%3A%2F%2F${HOSTNAME}%2F\&response_type\=code\&scope\=openid+profile+email
+	  - LOGOUT_REDIRECT=https://sso.${HOSTNAME}/auth/realms/dotbase/protocol/openid-connect/auth?client_id=central-proxy&redirect_uri=https%3A%2F%2F${HOSTNAME}%2F&response_type=code&scope=openid+profile+email
       - SECRET=${SIGNING_SECRET}
     deploy:
       replicas: 1
