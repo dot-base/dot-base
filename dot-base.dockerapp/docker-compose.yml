@@ -134,7 +134,7 @@ services:
         - "traefik.http.services.error-handler.loadbalancer.server.port=80"
 
   medical-dashboard:
-    image: ghcr.io/dot-base/medical-dashboard:1.1.0
+    image: ghcr.io/dot-base/medical-dashboard:1.1.1
     networks:
       - proxy
     deploy:
@@ -152,7 +152,7 @@ services:
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
 
   fhir-server:
-    image: ghcr.io/dot-base/fhir-server:8.0.0
+    image: ghcr.io/dot-base/fhir-server:8.0.1
     environment:
       PROXY_ADDRESS: ${PROXY_ADDRESS}
       PROXY_PORT: ${PROXY_PORT}
