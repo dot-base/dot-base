@@ -35,7 +35,7 @@ services:
         condition: on-failure
     labels:
       - "traefik.enable=true"
-      - "traefik.http.middlewares.cors.headers.accessControlAllowMethods=GET,OPTIONS,PUT"
+      - "traefik.http.middlewares.cors.headers.accessControlAllowMethods=GET,OPTIONS,PUT,POST"
       - "traefik.http.middlewares.cors.headers.accessControlAllowOriginList=https://${HOSTNAME}"
       - "traefik.http.middlewares.cors.headers.accessControlAllowHeaders=*"
       - "traefik.http.middlewares.cors.headers.accessControlMaxAge=100"
