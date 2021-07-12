@@ -33,6 +33,13 @@ services:
         delay: 60s
       restart_policy:
         condition: on-failure
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.cors.headers.accessControlAllowMethods=GET,OPTIONS,PUT"
+      - "traefik.http.middlewares.cors.headers.accessControlAllowOriginList=https://${HOSTNAME}"
+      - "traefik.http.middlewares.cors.headers.accessControlAllowHeaders=*"
+      - "traefik.http.middlewares.cors.headers.accessControlMaxAge=100"
+      - "traefik.http.middlewares.cors.headers.addVaryHeader=true"
   
   traefik-forward-auth:
     image: thomseddon/traefik-forward-auth:2.2
