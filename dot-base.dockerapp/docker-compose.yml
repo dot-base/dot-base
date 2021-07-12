@@ -33,13 +33,6 @@ services:
         delay: 60s
       restart_policy:
         condition: on-failure
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.cors.headers.accessControlAllowMethods=GET,OPTIONS,PUT,POST"
-      - "traefik.http.middlewares.cors.headers.accessControlAllowOriginList=https://${HOSTNAME}"
-      - "traefik.http.middlewares.cors.headers.accessControlAllowHeaders=*"
-      - "traefik.http.middlewares.cors.headers.accessControlMaxAge=100"
-      - "traefik.http.middlewares.cors.headers.addVaryHeader=true"
   
   traefik-forward-auth:
     image: thomseddon/traefik-forward-auth:2.2
@@ -67,6 +60,12 @@ services:
         - "traefik.http.middlewares.sso.forwardauth.address=http://traefik-forward-auth:4181"
         - "traefik.http.middlewares.sso.forwardauth.authResponseHeaders=X-Forwarded-User"
         - "traefik.http.services.traefik-forward-auth.loadbalancer.server.port=4181"
+
+        - "traefik.http.middlewares.cors.headers.accessControlAllowMethods=GET,OPTIONS,PUT,POST"
+        - "traefik.http.middlewares.cors.headers.accessControlAllowOriginList=https://${HOSTNAME}"
+        - "traefik.http.middlewares.cors.headers.accessControlAllowHeaders=*"
+        - "traefik.http.middlewares.cors.headers.accessControlMaxAge=100"
+        - "traefik.http.middlewares.cors.headers.addVaryHeader=true"
 
   keycloak:
     image: ghcr.io/dot-base/keycloak:1.0.0
