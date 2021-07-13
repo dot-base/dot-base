@@ -14,10 +14,11 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--providers.file.directory=/run/config/"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.web-secure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=web-secure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.web-secure.address=:443"
+      - "--entrypoints.web-secure.http.middlewares=cors"
     configs:
       - source: traefik.toml
         target: /run/config/traefik.toml
