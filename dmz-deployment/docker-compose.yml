@@ -1,0 +1,117 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v2.2
+    networks:
+      - proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web-secure.address=:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+
+  fhir-server:
+    image: ghcr.io/dot-base/fhir-server:6.2.0
+    environment:
+      HAPI_SERVER_ADDRESS: "http://${HOSTNAME}/api/fhir/"
+      HAPI_DATASOURCE_URL: "jdbc:postgresql://fhir-db:5432/hapi_r4"
+      HAPI_DATASOURCE_USERNAME: ${FHIR_DB_USER}
+      HAPI_DATASOURCE_PASSWORD: ${FHIR_DB_PASSWORD}
+      SENTRY_DSN: ${FHIR_SERVER_SENTRY_DSN}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
+    networks:
+      - proxy
+      - fhir
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=dmz-fhir_proxy"
+        - "traefik.http.routers.fhir.rule=Host(`${HOSTNAME}`) && PathPrefix(`/api/fhir`)"
+        - "traefik.http.services.fhir.loadbalancer.server.port=8080"
+
+  fhir-db:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: "hapi_r4"
+      POSTGRES_USER: ${FHIR_DB_USER}
+      POSTGRES_PASSWORD: ${FHIR_DB_PASSWORD}
+    networks:
+      - fhir
+    volumes:
+      - fhir-data:/var/lib/postgresql/data
+    deploy:
+      placement:
+        max_replicas_per_node: 1
+
+  challenge-fhir-server:
+    image: ghcr.io/dot-base/fhir-server:6.2.0
+    environment:
+      HAPI_SERVER_ADDRESS: "http://challenge.dotbase.org/api/fhir/"
+      HAPI_DATASOURCE_URL: "jdbc:postgresql://challenge-fhir-db:5432/hapi_r4"
+      HAPI_DATASOURCE_USERNAME: ${FHIR_DB_USER}
+      HAPI_DATASOURCE_PASSWORD: ${FHIR_DB_PASSWORD}
+      SENTRY_DSN: ${FHIR_SERVER_SENTRY_DSN}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
+      HAPI_CORS_ALLOWED_ORIGIN: http://localhost:8080
+    networks:
+      - proxy
+      - fhir
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=dmz-fhir_proxy"
+        - "traefik.http.routers.challenge-fhir.rule=Host(`challenge.dotbase.org`) && PathPrefix(`/api/fhir`) && Method(`GET`)"
+        - "traefik.http.services.challenge-fhir.loadbalancer.server.port=8080"
+        - "traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,OPTIONS"
+        - "traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=http://localhost:8080"
+        - "traefik.http.middlewares.cors.headers.accesscontrolmaxage=100"
+        - "traefik.http.middlewares.cors.headers.addvaryheader=true"
+        - "traefik.http.routers.challenge-fhir.middlewares=cors@docker"
+
+  challenge-fhir-db:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: "hapi_r4"
+      POSTGRES_USER: ${FHIR_DB_USER}
+      POSTGRES_PASSWORD: ${FHIR_DB_PASSWORD}
+    networks:
+      - fhir
+    volumes:
+      - challenge-fhir-data:/var/lib/postgresql/data
+    deploy:
+      placement:
+        max_replicas_per_node: 1
+
+networks:
+  proxy:
+  fhir:
+
+volumes:
+  fhir-data:
+  challenge-fhir-data:

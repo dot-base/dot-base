@@ -10,16 +10,16 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.constraints=Label(`dotbase.instance.name`,`test`)"
-      # - "--providers.file.directory=/run/config/"
+      - "--providers.file.directory=/run/config/"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web-secure.address=:443"
-      # - "--entrypoints.web-secure.http.middlewares=cors"
-    # configs:
-    #   - source: traefik.toml
-    #     target: /run/config/traefik.toml
-    # secrets:
-    #   - cert.pem
-    #   - key.pem
+      - "--entrypoints.web-secure.http.middlewares=cors"
+    configs:
+      - source: traefik.toml
+        target: /run/config/traefik.toml
+    secrets:
+      - cert.pem
+      - key.pem
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:
