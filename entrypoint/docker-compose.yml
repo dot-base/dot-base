@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v2.5
+    networks:
+      - dotbase-entrypoint
+    ports:
+      - "9000:80"
+      - "9001:443"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.constraints=Label(`is.dotbase.instance.entrypoint`,`true`)"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web-secure.address=:443"
+      # - "--entrypoints.web.http.redirections.entryPoint.to=web-secure"
+      # - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      # - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+
+networks:
+  dotbase-entrypoint:

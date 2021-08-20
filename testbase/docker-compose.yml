@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v2.5
+    networks:
+      - dotbase-entrypoint
+      - dotbase-services
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.constraints=Label(`dotbase.instance.name`,`test`)"
+      # - "--providers.file.directory=/run/config/"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web-secure.address=:443"
+      # - "--entrypoints.web-secure.http.middlewares=cors"
+    # configs:
+    #   - source: traefik.toml
+    #     target: /run/config/traefik.toml
+    # secrets:
+    #   - cert.pem
+    #   - key.pem
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "is.dotbase.instance.entrypoint=true"
+        - "traefik.docker.network=dotbase-entrypoint_dotbase-entrypoint"
+        - "traefik.http.routers.entry.rule=PathPrefix(`/`)"
+        - "traefik.http.services.entry.loadbalancer.server.port=80"
+
+  medical-dashboard:
+    image: ghcr.io/dot-base/medical-dashboard:1.1.2
+    ports:
+      - "9003:80"
+    networks:
+      - dotbase-services
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 60s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "dotbase.instance.name=test"
+        - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+
+networks:
+  dotbase-entrypoint:
+    external: true
+    name: dotbase-entrypoint_dotbase-entrypoint
+  dotbase-services:
